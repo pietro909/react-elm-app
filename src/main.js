@@ -49,19 +49,21 @@ const appWithElm = Elm =>
     debug,
     expectedPorts,
     htmlNode,
-    initPortName,
+    renderLoader,
   }) => (WrappedComponent) => {
     /* eslint-disable no-console */
     const log = debug ? genericLogger(console.log) : noop
     const warn = debug ? genericLogger(console.warn) : noop
     /* eslint-enable no-console */
 
+    log('Init: ', { appName, startMessage, htmlNode, renderLoader })
+
     return class extends Component {
       constructor(props) {
         super(props)
         this.state = {
+          isReady: false,
           ports: {},
-          ready: false,
           incoming: {},
           outgoing: {},
         }
@@ -74,24 +76,10 @@ const appWithElm = Elm =>
         bootstrapElm(elmApp, htmlNode).then(app => {
           const portsOut = []
           const portsIn = []
+
           Object.keys(app.ports).forEach(portId => {
             const port = app.ports[portId]
             if (port.subscribe) {
-              if (portId === initPortName) {
-                const callback = data =>
-                  /* eslint-disable no-undef */
-                  requestAnimationFrame(() => {
-                  /* eslint-enable no-undef */
-                  log(`receive ${portId}`, data)
-                  this.setState(() => ({
-                    ports: app.ports,
-                      ready: true,
-                  }))
-                  port.unsubscribe(callback)
-                })
-                port.subscribe(callback)
-                return
-              }
 							portsOut.push(portId)
 							port.subscribe(data => this.setState(() => {
 								log(`receive ${portId}`, data)
@@ -121,20 +109,23 @@ const appWithElm = Elm =>
 
 					checkPorts(expectedPorts.in, portsOut)
 					checkPorts(expectedPorts.out, portsIn)
+
+          this.setState({ ...this.state, isReady: true })
         })
       }
 
       render() {
-        if (this.state.ready) {
+        if (this.state.isReady) {
           return (
             <WrappedComponent
+              isReady={!!this.state.isReady}
               ports={this.state.ports}
               incoming={this.state.incoming}
               outgoing={this.state.outgoing}
             />
           )
         }
-        return (<div>Loading...</div>)
+        return renderLoader()
       }
     }
   }

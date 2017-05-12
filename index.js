@@ -82,12 +82,14 @@ var appWithElm = function appWithElm(Elm) {
         debug = _ref.debug,
         expectedPorts = _ref.expectedPorts,
         htmlNode = _ref.htmlNode,
-        initPortName = _ref.initPortName;
+        renderLoader = _ref.renderLoader;
     return function (WrappedComponent) {
       /* eslint-disable no-console */
       var log = debug ? genericLogger(console.log) : noop;
       var warn = debug ? genericLogger(console.warn) : noop;
       /* eslint-enable no-console */
+
+      log('Init: ', { appName: appName, startMessage: startMessage, htmlNode: htmlNode, renderLoader: renderLoader });
 
       return function (_Component) {
         _inherits(_class, _Component);
@@ -98,8 +100,8 @@ var appWithElm = function appWithElm(Elm) {
           var _this = _possibleConstructorReturn(this, (_class.__proto__ || Object.getPrototypeOf(_class)).call(this, props));
 
           _this.state = {
+            isReady: false,
             ports: {},
-            ready: !initPortName,
             incoming: {},
             outgoing: {}
           };
@@ -112,29 +114,10 @@ var appWithElm = function appWithElm(Elm) {
           bootstrapElm(elmApp, htmlNode).then(function (app) {
             var portsOut = [];
             var portsIn = [];
+
             Object.keys(app.ports).forEach(function (portId) {
               var port = app.ports[portId];
               if (port.subscribe) {
-                if (portId === initPortName) {
-                  var callback = function callback(data) {
-                    return (
-                      /* eslint-disable no-undef */
-                      requestAnimationFrame(function () {
-                        /* eslint-enable no-undef */
-                        log('receive ' + portId, data);
-                        _this.setState(function () {
-                          return {
-                            ports: app.ports,
-                            ready: true
-                          };
-                        });
-                        port.unsubscribe(callback);
-                      })
-                    );
-                  };
-                  port.subscribe(callback);
-                  return;
-                }
                 portsOut.push(portId);
                 port.subscribe(function (data) {
                   return _this.setState(function () {
@@ -166,6 +149,8 @@ var appWithElm = function appWithElm(Elm) {
 
             checkPorts(expectedPorts.in, portsOut);
             checkPorts(expectedPorts.out, portsIn);
+
+            _this.setState(_extends({}, _this.state, { isReady: true }));
           });
           return _this;
         }
@@ -173,29 +158,20 @@ var appWithElm = function appWithElm(Elm) {
         _createClass(_class, [{
           key: 'render',
           value: function render() {
-            if (this.state.ready) {
+            if (this.state.isReady) {
               return _react2.default.createElement(WrappedComponent, {
+                isReady: !!this.state.isReady,
                 ports: this.state.ports,
                 incoming: this.state.incoming,
                 outgoing: this.state.outgoing,
                 __source: {
                   fileName: _jsxFileName,
-                  lineNumber: 130
+                  lineNumber: 120
                 },
                 __self: this
               });
             }
-            return _react2.default.createElement(
-              'div',
-              {
-                __source: {
-                  fileName: _jsxFileName,
-                  lineNumber: 137
-                },
-                __self: this
-              },
-              'Loading...'
-            );
+            return renderLoader();
           }
         }]);
 
