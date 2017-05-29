@@ -9,7 +9,7 @@ const bootstrapElm = (elmApp, node, flags = {}) =>
 /* eslint-disable no-console */
 const genericLogger = logger => (label, data) => {
   console.group(label)
-  if (typeof data === 'object' && typeof data.forEach === 'function') {
+  if (data && typeof data.forEach === 'function') {
     data.forEach(a => logger(a))
   } else {
     logger(data)
@@ -50,13 +50,14 @@ const appWithElm = Elm =>
     expectedPorts,
     htmlNode,
     renderLoader,
+    flags,
   }) => (WrappedComponent) => {
     /* eslint-disable no-console */
     const log = debug ? genericLogger(console.log) : noop
     const warn = debug ? genericLogger(console.warn) : noop
     /* eslint-enable no-console */
 
-    log('Init: ', { appName, startMessage, htmlNode, renderLoader })
+    log('Init: ', { appName, startMessage, htmlNode, renderLoader, flags })
 
     return class extends Component {
       constructor(props) {
@@ -73,7 +74,7 @@ const appWithElm = Elm =>
           throw new TypeError(`The application ${appName} can't be found!`)
         }
 
-        bootstrapElm(elmApp, htmlNode).then(app => {
+        bootstrapElm(elmApp, htmlNode, flags).then(app => {
           const portsOut = []
           const portsIn = []
 

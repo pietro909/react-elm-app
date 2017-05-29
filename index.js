@@ -9,8 +9,6 @@ var _extends = Object.assign || function (target) { for (var i = 1; i < argument
 
 var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
 
-var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol && obj !== Symbol.prototype ? "symbol" : typeof obj; };
-
 var _react = require('react');
 
 var _react2 = _interopRequireDefault(_react);
@@ -41,7 +39,7 @@ var bootstrapElm = function bootstrapElm(elmApp, node) {
 var genericLogger = function genericLogger(logger) {
   return function (label, data) {
     console.group(label);
-    if ((typeof data === 'undefined' ? 'undefined' : _typeof(data)) === 'object' && typeof data.forEach === 'function') {
+    if (data && typeof data.forEach === 'function') {
       data.forEach(function (a) {
         return logger(a);
       });
@@ -82,14 +80,15 @@ var appWithElm = function appWithElm(Elm) {
         debug = _ref.debug,
         expectedPorts = _ref.expectedPorts,
         htmlNode = _ref.htmlNode,
-        renderLoader = _ref.renderLoader;
+        renderLoader = _ref.renderLoader,
+        flags = _ref.flags;
     return function (WrappedComponent) {
       /* eslint-disable no-console */
       var log = debug ? genericLogger(console.log) : noop;
       var warn = debug ? genericLogger(console.warn) : noop;
       /* eslint-enable no-console */
 
-      log('Init: ', { appName: appName, startMessage: startMessage, htmlNode: htmlNode, renderLoader: renderLoader });
+      log('Init: ', { appName: appName, startMessage: startMessage, htmlNode: htmlNode, renderLoader: renderLoader, flags: flags });
 
       return function (_Component) {
         _inherits(_class, _Component);
@@ -111,7 +110,7 @@ var appWithElm = function appWithElm(Elm) {
             throw new TypeError('The application ' + appName + ' can\'t be found!');
           }
 
-          bootstrapElm(elmApp, htmlNode).then(function (app) {
+          bootstrapElm(elmApp, htmlNode, flags).then(function (app) {
             var portsOut = [];
             var portsIn = [];
 
@@ -166,7 +165,7 @@ var appWithElm = function appWithElm(Elm) {
                 outgoing: this.state.outgoing,
                 __source: {
                   fileName: _jsxFileName,
-                  lineNumber: 120
+                  lineNumber: 121
                 },
                 __self: this
               });
